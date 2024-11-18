@@ -86,6 +86,21 @@ class OpcPackage(object):
         for part in walk_parts(self):
             yield part
 
+    def next_partname(self, tmpl):
+        """
+        Return a |PackURI| instance representing the next available partname
+        matching *tmpl*, which is a printf (%)-style template string
+        containing a single replacement item, a '%d' to be used to insert the
+        integer portion of the partname. Example: '/word/slides/slide%d.xml'
+        """
+        tmpl = tmpl.replace('/ppt', '/word')
+        partnames = [part.partname for part in self.iter_parts()]
+        for n in range(1, len(partnames)+2):
+            candidate_partname = tmpl % n
+            if candidate_partname not in partnames:
+                return PackURI(candidate_partname)
+        raise Exception('ProgrammingError: ran out of candidate_partnames')
+
     def load_rel(self, reltype, target, rId, is_external=False):
         """
         Return newly added |_Relationship| instance of *reltype* between this
@@ -169,8 +184,8 @@ class OpcPackage(object):
         Save this package to *pkg_file*, where *file* can be either a path to
         a file (a string) or a file-like object.
         """
-        for part in self.parts:
-            part.before_marshal()
+        # for part in self.parts:
+        #     part.before_marshal()
         PackageWriter.write(pkg_file, self.rels, self.parts)
 
     @property
